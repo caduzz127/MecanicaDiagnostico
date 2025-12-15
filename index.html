@@ -200,6 +200,16 @@
                 updateNext();
             }
         });
+
+        // Prevenir scroll da página quando o input for focado
+        const inputNome = document.querySelector('input[type="text"]');
+        let scrollY = 0;
+        inputNome.addEventListener('focus', () => {
+            scrollY = window.scrollY;
+        });
+        inputNome.addEventListener('blur', () => {
+            window.scrollTo(0, scrollY);
+        });
     </script>
 </body>
 
