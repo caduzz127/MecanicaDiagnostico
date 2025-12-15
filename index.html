@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        header {
+            width: 100%;
+            background-color: #000;
+            text-align: center;
+        }
+
+        header img {
+            max-width: 100%;
+        }
+
+        /* CONTEÚDO */
+        .descricao {
+            margin-top: 40px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .descricao h2 {
+            margin-bottom: 20px;
+        }
+
+        /* DROPDOWN */
+        .marcaCarro {
+            width: 300px;
+            background-color: #000;
+            color: #fff;
+            margin: 15px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .seta {
+            width: 18px;
+            height: 18px;
+            border-right: 2px solid #fff;
+            border-bottom: 2px solid #fff;
+            transform: rotate(45deg);
+            transition: transform 0.3s ease;
+            margin-left: 10px;
+            display: inline-block;
+        }
+
+        /* TÍTULO */
+        .titulo {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+        }
+
+     
+
+        /* LISTA */
+        .marcas {
+            display: none;
+            padding: 10px;
+            background-color: #111;
+            border-top: 1px solid #333;
+        }
+
+        .marcas select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+        }
+
+        /* ATIVO */
+        .marcas.ativo {
+            display: block;
+        }
+
+        .marcaCarro.bloqueado {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* quando abrir */
+        .seta.ativo {
+            transform: rotate(225deg);
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <img src="logoMecanicaCortada.png" alt="">
+    </header>
+    <main>
+    
+        <div class="descricao">
+            <h2>Descreva seu Carro</h2>
+    
+            <div class="marcaCarro">
+                <div class="titulo">
+                    <p>Escolha a Marca</p>
+                    <span class="seta"></span>
+                </div>
+                <div class="marcas">
+                    <select>
+                        <option value="" selected disabled>Selecione...</option>
+                        <option>Chevrolet</option>
+                        <option>Fiat</option>
+                        <option>Ford</option>
+                        <option>BYD</option>
+                        <option>Volkswagen</option>
+                        <option>Peugeot</option>
+                        <option>Hyundai</option>
+                        <option>Honda</option>
+                        <option>Toyota</option>
+                        <option>Nissan</option>
+                        <option>Citroën</option>
+                    </select>
+                </div>
+            </div>
+    
+        
+            
+    
+            <div class="marcaCarro bloqueado">
+                <div class="titulo">
+                    <p>Digite o Nome do Carro</p>
+                    <span class="seta"></span>
+                </div>
+                <div class="marcas">
+                    <input type="text" placeholder="Digite o modelo do carro" style="width: 100%; padding: 8px; border-radius: 4px; border: none;">
+                </div>
+            </div>
+
+        </div>
+        
+</main>    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <script>
+        // Suporta múltiplos componentes `.marcaCarro` na página
+        const marcaCarros = document.querySelectorAll('.marcaCarro');
+
+        marcaCarros.forEach((marca, index) => {
+            const marcas = marca.querySelector('.marcas');
+            const seta = marca.querySelector('.seta');
+            const titulo = marca.querySelector('.titulo');
+
+            const toggle = (e) => {
+                if (e) e.stopPropagation();
+                if (marcas) marcas.classList.toggle('ativo');
+                if (seta) seta.classList.toggle('ativo');
+            };
+
+            if (seta) seta.addEventListener('click', toggle);
+            if (titulo) titulo.addEventListener('click', toggle);
+
+            // Se esse componente tem um <select>, ele controla o próximo
+            const select = marca.querySelector('select');
+            if (select) {
+                const updateNext = () => {
+                    const next = marcaCarros[index + 1];
+                    if (!next) return;
+                    if (select.value && select.value !== '') {
+                        next.classList.remove('bloqueado');
+                    } else {
+                        next.classList.add('bloqueado');
+                    }
+                };
+
+                select.addEventListener('change', updateNext);
+                // avaliar estado inicial
+                updateNext();
+            }
+        });
+    </script>
+</body>
+
+</html>
