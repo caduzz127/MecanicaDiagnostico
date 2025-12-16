@@ -88,7 +88,7 @@
 
         .marcas select,
         .marcas input {
-            width: 100%;
+            width: 80%;
             padding: 8px;
             border-radius: 4px;
             border: none;
@@ -147,8 +147,6 @@
         .botao-proximo.loading .spinner {
             opacity: 1;
         }
-
-        
     </style>
 </head>
 
@@ -167,19 +165,19 @@
                     <span class="seta"></span>
                 </div>
                 <div class="marcas">
-                    <select autocomplete="off">
-                        <option value="" selected disabled>Selecione...</option>
-                        <option>Chevrolet</option>
-                        <option>Fiat</option>
-                        <option>Ford</option>
-                        <option>BYD</option>
-                        <option>Volkswagen</option>
-                        <option>Peugeot</option>
-                        <option>Hyundai</option>
-                        <option>Honda</option>
-                        <option>Toyota</option>
-                        <option>Nissan</option>
-                        <option>Citroën</option>
+                    <select autocomplete="off" id="selecao-marcas">
+                        <option value="select" selected disabled>Selecione...</option>
+                        <option value="Chevrolet">Chevrolet</option>
+                        <option value="Fiat">Fiat</option>
+                        <option value="Ford">Ford</option>
+                        <option value="BYD">BYD</option>
+                        <option value="Volkswagen">Volkswagen</option>
+                        <option value="Peugeot">Peugeot</option>
+                        <option value="Hyundai">Hyundai</option>
+                        <option value="Honda">Honda</option>
+                        <option value="Toyota">Toyota</option>
+                        <option value="Nissan">Nissan</option>
+                        <option value="Citroën">Citroën</option>
                     </select>
                 </div>
             </div>
@@ -202,20 +200,14 @@
     </main>
 
     <script>
-        // Forçar recarregamento ao voltar para a página
-        window.addEventListener('pageshow', function(event) {
-            if (event.persisted) {
-                window.location.reload();
-            }
+        // Ao voltar/avançar no histórico, re-inicializa valores a partir
+        // da query string ou sessionStorage (evita limpar campos do usuário)
+        window.addEventListener('pageshow', function (event) {
+            initFromStorage();
         });
 
-        // Resetar formulário ao carregar a página
         const selects = document.querySelectorAll('select');
-        selects.forEach(select => select.value = '');
-        const inputs = document.querySelectorAll('input');
-        inputs.forEach(input => input.value = '');
         const marcaCarros = document.querySelectorAll('.marcaCarro');
-        if (marcaCarros[1]) marcaCarros[1].classList.add('bloqueado');
         const botao = document.querySelector('.botao-proximo');
         const inputModelo = document.querySelector('input');
         botao.disabled = true;
@@ -237,21 +229,86 @@
                 select.addEventListener('change', () => {
                     const next = marcaCarros[index + 1];
                     if (select.value) next.classList.remove('bloqueado');
+                    atualizarEstadoBotao();
                 });
             }
         });
 
         inputModelo.addEventListener('input', () => {
-            botao.disabled = inputModelo.value.trim() === '';
+            atualizarEstadoBotao();
         });
 
         botao.addEventListener('click', () => {
             botao.classList.add('loading');
+            const valores = pegarValores();
+            try {
+                sessionStorage.setItem('marca', valores.marca || '');
+                sessionStorage.setItem('modelo', valores.modelo || '');
+            } catch (e) {
+                console.error('Erro ao salvar dados no sessionStorage', e);
+            }
 
             setTimeout(() => {
-                window.location.href = 'servicos.html';
+                const url = `servicos.html?marca=${encodeURIComponent(valores.marca||'')}&modelo=${encodeURIComponent(valores.modelo||'')}`;
+                console.log('Redirecionando para:', url);
+                window.location.href = url;
             }, 1500);
         });
+
+
+
+        // Recebe um objeto com os valores dos campos e retorna true se
+        // todos os campos estiverem preenchidos/selecionados corretamente.
+        // Não permite prosseguir se o select não estiver selecionado.
+        function validarCampos({ marca, modelo }) {
+            if (!marca) return false; // select vazio ou não selecionado
+            if (marca === 'select') return false; // opção padrão
+            if (!modelo || modelo.trim() === '') return false; // input vazio
+            return true;
+        }
+
+        function atualizarEstadoBotao() {
+            const valores = pegarValores();
+            botao.disabled = !validarCampos(valores);
+        }
+        function pegarValores() {
+            const marcaSelect = document.getElementById('selecao-marcas') || selects[0];
+            const marca = marcaSelect ? marcaSelect.value : '';
+            const modelo = inputModelo ? inputModelo.value.trim() : '';
+            return { marca, modelo };
+        }
+        // Inicializa a página a partir de URL/sessionStorage
+        function initFromStorage() {
+            const params = new URLSearchParams(window.location.search);
+            const marcaParam = params.get('marca');
+            const modeloParam = params.get('modelo');
+
+            const storedMarca = sessionStorage.getItem('marca');
+            const storedModelo = sessionStorage.getItem('modelo');
+
+            const marcaToSet = (marcaParam !== null) ? marcaParam : (storedMarca || '');
+            const modeloToSet = (modeloParam !== null) ? modeloParam : (storedModelo || '');
+
+            const selectEl = document.getElementById('selecao-marcas') || selects[0];
+            if (selectEl && marcaToSet) {
+                try { selectEl.value = marcaToSet; } catch (e) { /* ignore */ }
+            }
+
+            if (inputModelo && modeloToSet) {
+                inputModelo.value = modeloToSet;
+            }
+
+            if (marcaToSet && marcaCarros[1]) {
+                marcaCarros[1].classList.remove('bloqueado');
+            } else if (marcaCarros[1]) {
+                marcaCarros[1].classList.add('bloqueado');
+            }
+
+            atualizarEstadoBotao();
+        }
+
+        // Inicializa na primeira carga
+        initFromStorage();
     </script>
 </body>
 
