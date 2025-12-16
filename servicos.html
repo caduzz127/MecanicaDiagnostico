@@ -116,23 +116,29 @@
             cursor: pointer;
             background-color: #222;
             border-radius: 5px;
-            justify-content: space-between;
-        }
-
-        .lista-servicos input[type="checkbox"] {
-            margin-right: 15px;
-            width: 20px;
-            height: 20px;
+            gap: 12px;
         }
 
         .servico-nome {
             font-size: 18px;
             font-weight: bold;
+            flex: 1 1 auto;
         }
 
         .servico-preco {
             font-size: 14px;
             color: #ccc;
+            white-space: nowrap;
+            margin-right: 8px;
+            flex: 0 0 auto;
+        }
+
+        .lista-servicos input[type="checkbox"] {
+            margin: 0;
+            width: 20px;
+            height: 20px;
+            flex: 0 0 auto;
+            align-self: center;
         }
 
         /* BOTÃO COM ANIMAÇÃO */
@@ -197,36 +203,37 @@
     <main>
         <div class="descricao">
             <h2>Selecione os Serviços</h2>
+            <div id="carro-info" style="font-size:15px;color:#ddd;margin-bottom:10px;"></div>
             <div class="lista-servicos">
                 <label>
-                    <input type="checkbox" name="servico" value="troca-oleo">
                     <span class="servico-nome">Troca de Óleo</span>
                     <span class="servico-preco">R$ 120 a 250</span>
+                    <input type="checkbox" name="servico" value="troca-oleo">
                 </label>
                 <label>
-                    <input type="checkbox" name="servico" value="revisao-geral">
                     <span class="servico-nome">Revisão Geral</span>
-                    <span class="servico-preco">Consulte</span>
+                    <span class="servico-preco">R$ 150 a 400</span>
+                    <input type="checkbox" name="servico" value="revisao-geral">
                 </label>
                 <label>
-                    <input type="checkbox" name="servico" value="alinhamento">
                     <span class="servico-nome">Alinhamento e Balanceamento</span>
-                    <span class="servico-preco">Consulte</span>
+                    <span class="servico-preco">R$ 80 a 120</span>
+                    <input type="checkbox" name="servico" value="alinhamento">
                 </label>
                 <label>
-                    <input type="checkbox" name="servico" value="troca-pneus">
                     <span class="servico-nome">Troca de Pneus</span>
-                    <span class="servico-preco">Consulte</span>
+                    <span class="servico-preco">R$ 150 a 350</span>
+                    <input type="checkbox" name="servico" value="troca-pneus">
                 </label>
                 <label>
+                    <span class="servico-nome">Limpeza de bicos injetores</span>
+                    <span class="servico-preco">R$ 180 a 350</span>
                     <input type="checkbox" name="servico" value="lavagem">
-                    <span class="servico-nome">Lavagem Completa</span>
-                    <span class="servico-preco">Consulte</span>
                 </label>
                 <label>
-                    <input type="checkbox" name="servico" value="diagnostico">
                     <span class="servico-nome">Diagnóstico Eletrônico</span>
-                    <span class="servico-preco">Consulte</span>
+                    <span class="servico-preco">R$ 80 a 150</span>
+                    <input type="checkbox" name="servico" value="diagnostico">
                 </label>
             </div>
             <button class="botao-proximo" disabled>Próximo</button>
@@ -257,13 +264,58 @@
             cb.addEventListener('change', verificarSelecao);
         });
 
+        // Quando a página for exibida (incluindo volta via seta do navegador),
+        // limpe as seleções dos serviços mas preserve marca/modelo exibidos.
+        window.addEventListener('pageshow', function(event) {
+            // desmarcar todas as checkboxes
+            checkboxes.forEach(cb => cb.checked = false);
+            // atualizar estado do botão
+            verificarSelecao();
+        });
+
         botao.addEventListener('click', () => {
             botao.classList.add('loading');
 
+            // coletar serviços selecionados
+            const selecionados = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => {
+                    // procurar o título do serviço na mesma label
+                    const label = cb.closest('label');
+                    const nomeEl = label ? label.querySelector('.servico-nome') : null;
+                    return nomeEl ? nomeEl.textContent.trim() : cb.value;
+                });
+
+            // coletar marca/modelo (prioriza query string, depois sessionStorage)
+            const params = new URLSearchParams(window.location.search);
+            const marca = params.get('marca') || sessionStorage.getItem('marca') || '';
+            const modelo = params.get('modelo') || sessionStorage.getItem('modelo') || '';
+
+            const mensagem = `Olá, gostaria de agendar os seguintes serviços para meu carro:`
+                + `\nMarca: ${marca || '-'}\nModelo: ${modelo || '-'}\n\nServiços:\n` 
+                + (selecionados.length ? selecionados.map(s => `- ${s}`).join('\n') : '- nenhum selecionado');
+
+            const urlWhatsapp = `https://wa.me/5521964478145?text=${encodeURIComponent(mensagem)}`;
+
             setTimeout(() => {
-                window.location.href = 'proxima-pagina.html';
-            }, 1500);
+                window.location.href = urlWhatsapp;
+            }, 800);
         });
+        // Mostrar marca e modelo enviados pela página anterior (sessionStorage)
+        console.log("Página de serviços carregada.");
+        const carroInfoEl = document.getElementById('carro-info');
+        const params = new URLSearchParams(window.location.search);
+        const marcaParam = params.get('marca');
+        const modeloParam = params.get('modelo');
+        const marca = (marcaParam !== null) ? marcaParam : (sessionStorage.getItem('marca') || '');
+        const modelo = (modeloParam !== null) ? modeloParam : (sessionStorage.getItem('modelo') || '');
+        if (carroInfoEl) {
+            if (marca || modelo) {
+                carroInfoEl.textContent = `Marca: ${marca} — Modelo: ${modelo}`;
+            } else {
+                carroInfoEl.textContent = 'Marca e modelo não informados.';
+            }
+        }
     </script>
 </body>
 
